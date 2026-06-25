@@ -1,0 +1,10 @@
+{
+  "name": "gym-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Registro personal de entrenamiento — pesos y reps por ejercicio",
+  "scripts": {
+    "dev": "npx serve public",
+    "start": "npx serve public"
+  }
+}

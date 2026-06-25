@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0e0f13">
+<title>Registro de Entreno</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  :root{
+    --bg:#0e0f13;
+    --panel:#16181f;
+    --panel2:#1d2029;
+    --line:#2a2e3a;
+    --ink:#f4f5f7;
+    --ink-dim:#8b909e;
+    --amber:#f2a900;
+    --amber-soft:#3a2f12;
+    --green:#3ecf8e;
+    --red:#e5484d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  body{padding-bottom:90px;max-width:560px;margin:0 auto;min-height:100vh}
+  /* Header */
+  header{position:sticky;top:0;z-index:50;background:rgba(14,15,19,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:16px 18px 12px}
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand h1{font-size:20px;font-weight:800;letter-spacing:-.02em}
+  .brand .accent{color:var(--amber)}
+  .brand .date{margin-left:auto;font-size:12px;color:var(--ink-dim);font-variant-numeric:tabular-nums}
+  /* Day selector */
+  .days{display:flex;gap:8px;margin-top:14px}
+  .day-btn{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--ink-dim);padding:10px 4px;border-radius:12px;font-size:13px;font-weight:700;letter-spacing:.02em;cursor:pointer;transition:.15s;text-transform:uppercase}
+  .day-btn.active{background:var(--amber);color:#1a1300;border-color:var(--amber)}
+  /* Main */
+  main{padding:18px}
+  .session-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .session-head h2{font-size:26px;font-weight:800;letter-spacing:-.03em}
+  .session-sub{color:var(--ink-dim);font-size:13px;margin-bottom:18px}
+  /* Exercise card */
+  .ex{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin-bottom:14px;overflow:hidden}
+  .ex-head{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer}
+  .ex-name{font-size:16px;font-weight:700;flex:1;line-height:1.2}
+  .ex-target{font-size:11px;color:var(--amber);background:var(--amber-soft);padding:3px 8px;border-radius:6px;font-weight:700;white-space:nowrap}
+  .ex-last{font-size:12px;color:var(--ink-dim);padding:0 16px 12px;margin-top:-4px;font-variant-numeric:tabular-nums}
+  .ex-last b{color:var(--ink)}
+  .ex-body{border-top:1px solid var(--line);padding:14px 16px;display:none}
+  .ex.open .ex-body{display:block}
+  .ex.open .chev{transform:rotate(180deg)}
+  .chev{color:var(--ink-dim);transition:.2s;font-size:13px}
+  /* Set rows */
+  .set-row{display:grid;grid-template-columns:34px 1fr 1fr 40px;gap:8px;align-items:center;margin-bottom:10px}
+  .set-row .idx{font-size:13px;font-weight:700;color:var(--ink-dim);text-align:center;font-variant-numeric:tabular-nums}
+  .inp{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:12px 8px;font-size:18px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+  .inp::placeholder{color:#4a4f5c;font-weight:600}
+  .inp:focus{outline:none;border-color:var(--amber)}
+  .inp-lbl{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-bottom:4px;font-weight:700}
+  .set-head{display:grid;grid-template-columns:34px 1fr 1fr 40px;gap:8px;margin-bottom:6px}
+  .del-set{background:none;border:none;color:#5a5f6c;font-size:20px;cursor:pointer;padding:4px}
+  .del-set:active{color:var(--red)}
+  .row-btns{display:flex;gap:8px;margin-top:4px}
+  .mini-btn{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--ink-dim);padding:10px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
+  .mini-btn:active{background:var(--line)}
+  .mini-btn.save{background:var(--amber);color:#1a1300;border-color:var(--amber)}
+  .saved-flash{color:var(--green);font-size:13px;font-weight:700;text-align:center;padding:8px;display:none}
+  /* Add exercise */
+  .add-ex{width:100%;background:none;border:1px dashed var(--line);color:var(--ink-dim);padding:14px;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px}
+  .add-ex:active{border-color:var(--amber);color:var(--amber)}
+  /* Bottom nav */
+  nav{position:fixed;bottom:0;left:0;right:0;max-width:560px;margin:0 auto;background:rgba(22,24,31,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
+  .nav-btn{flex:1;background:none;border:none;color:var(--ink-dim);padding:8px;font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;letter-spacing:.02em}
+  .nav-btn .ic{font-size:20px}
+  .nav-btn.active{color:var(--amber)}
+  /* History view */
+  .hidden{display:none}
+  .hist-item{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+  .hist-date{font-size:12px;color:var(--amber);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+  .hist-ex{font-size:14px;margin-bottom:6px}
+  .hist-ex b{font-weight:700}
+  .hist-ex .sets{color:var(--ink-dim);font-variant-numeric:tabular-nums}
+  .empty{text-align:center;color:var(--ink-dim);padding:60px 20px;font-size:15px;line-height:1.6}
+  .empty .big{font-size:40px;margin-bottom:12px}
+  /* Modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:flex-end;justify-content:center}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:20px 20px 0 0;width:100%;max-width:560px;padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:up .25s ease}
+  @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .modal h3{font-size:18px;font-weight:800;margin-bottom:16px}
+  .modal input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:14px;font-size:16px;margin-bottom:12px}
+  .modal input:focus{outline:none;border-color:var(--amber)}
+  .modal-btns{display:flex;gap:10px}
+  .modal-btns button{flex:1;padding:14px;border-radius:12px;font-size:15px;font-weight:700;border:1px solid var(--line);cursor:pointer}
+  .btn-cancel{background:var(--panel2);color:var(--ink-dim)}
+  .btn-ok{background:var(--amber);color:#1a1300;border-color:var(--amber)}
+  .settings-row{display:flex;justify-content:space-between;align-items:center;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:12px}
+  .settings-row .lbl{font-size:15px;font-weight:600}
+  .settings-row .desc{font-size:12px;color:var(--ink-dim);margin-top:3px}
+  .s-btn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .s-btn.danger{color:var(--red);border-color:#4a2326}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>FUERZA<span class="accent">.</span></h1>
+    <span class="date" id="todayDate"></span>
+  </div>
+  <div class="days" id="daySelector"></div>
+</header>
+
+<main id="logView">
+  <div class="session-head">
+    <h2 id="sessionTitle">Push</h2>
+  </div>
+  <div class="session-sub" id="sessionSub">Empuje · pecho, hombro, tríceps</div>
+  <div id="exerciseList"></div>
+  <button class="add-ex" id="addExBtn">+ Agregar ejercicio</button>
+</main>
+
+<main id="historyView" class="hidden">
+  <div class="session-head"><h2>Historial</h2></div>
+  <div class="session-sub">Tus sesiones guardadas, de la más reciente a la más vieja</div>
+  <div id="historyList"></div>
+</main>
+
+<main id="settingsView" class="hidden">
+  <div class="session-head"><h2>Ajustes</h2></div>
+  <div class="session-sub">Tus datos viven solo en este dispositivo</div>
+  <div class="settings-row">
+    <div><div class="lbl">Exportar datos</div><div class="desc">Descargá un respaldo en archivo</div></div>
+    <button class="s-btn" id="exportBtn">Exportar</button>
+  </div>
+  <div class="settings-row">
+    <div><div class="lbl">Importar datos</div><div class="desc">Restaurá desde un respaldo</div></div>
+    <button class="s-btn" id="importBtn">Importar</button>
+  </div>
+  <div class="settings-row">
+    <div><div class="lbl">Restaurar rutina original</div><div class="desc">Vuelve a los ejercicios del plan</div></div>
+    <button class="s-btn" id="resetRoutineBtn">Restaurar</button>
+  </div>
+  <div class="settings-row">
+    <div><div class="lbl">Borrar todo</div><div class="desc">Elimina rutina e historial</div></div>
+    <button class="s-btn danger" id="wipeBtn">Borrar</button>
+  </div>
+  <input type="file" id="fileInput" accept="application/json" style="display:none">
+</main>
+
+<nav>
+  <button class="nav-btn active" data-view="logView"><span class="ic">▦</span>Registrar</button>
+  <button class="nav-btn" data-view="historyView"><span class="ic">≣</span>Historial</button>
+  <button class="nav-btn" data-view="settingsView"><span class="ic">⚙</span>Ajustes</button>
+</nav>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">Agregar ejercicio</h3>
+    <input type="text" id="modalInput" placeholder="Nombre del ejercicio" autocomplete="off">
+    <input type="text" id="modalTarget" placeholder="Objetivo (ej. 4×6-8)" autocomplete="off">
+    <div class="modal-btns">
+      <button class="btn-cancel" id="modalCancel">Cancelar</button>
+      <button class="btn-ok" id="modalOk">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_ROUTINE = {
+  push: { name:"Push", sub:"Empuje · pecho, hombro, tríceps", exercises:[
+    {id:"p1", name:"Press banca con barra", target:"4×6-8"},
+    {id:"p2", name:"Press inclinado mancuernas", target:"3×8-10"},
+    {id:"p3", name:"Press militar", target:"3×8-10"},
+    {id:"p4", name:"Aperturas / pec deck", target:"3×12-15"},
+    {id:"p5", name:"Extensión tríceps en polea", target:"3×10-12"},
+    {id:"p6", name:"Press francés o fondos", target:"3×10-12"},
+  ]},
+  pull: { name:"Pull", sub:"Tracción · espalda, bíceps", exercises:[
+    {id:"l1", name:"Dominadas o jalón al pecho", target:"4×6-10"},
+    {id:"l2", name:"Remo con barra", target:"4×6-8"},
+    {id:"l3", name:"Remo en polea (agarre cerrado)", target:"3×10-12"},
+    {id:"l4", name:"Face pull", target:"3×15"},
+    {id:"l5", name:"Curl bíceps con barra", target:"3×10-12"},
+    {id:"l6", name:"Curl martillo", target:"3×12"},
+  ]},
+  legs: { name:"Legs", sub:"Piernas + core", exercises:[
+    {id:"g1", name:"Sentadilla con barra", target:"4×6-8"},
+    {id:"g2", name:"Peso muerto rumano", target:"3×8-10"},
+    {id:"g3", name:"Prensa o sentadilla búlgara", target:"3×10-12"},
+    {id:"g4", name:"Curl femoral (camilla)", target:"3×12-15"},
+    {id:"g5", name:"Elevación de gemelos", target:"4×12-15"},
+    {id:"g6", name:"Abdominales (colgado o rueda)", target:"3×12-15"},
+  ]},
+};
+
+const K_ROUTINE = "ft_routine_v1";
+const K_HISTORY = "ft_history_v1";
+const DAYS = ["push","pull","legs"];
+
+let routine = load(K_ROUTINE) || structuredClone(DEFAULT_ROUTINE);
+let history = load(K_HISTORY) || [];
+let currentDay = "push";
+let draft = {}; // {exId: [{w,r}, ...]}
+
+function load(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
+function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+// ---- Date ----
+function todayStr(){
+  const d=new Date();
+  return d.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"short"});
+}
+function isoDay(){ return new Date().toISOString().slice(0,10); }
+document.getElementById("todayDate").textContent = todayStr();
+
+// ---- Day selector ----
+const daySelector = document.getElementById("daySelector");
+function renderDays(){
+  daySelector.innerHTML="";
+  DAYS.forEach(d=>{
+    const b=document.createElement("button");
+    b.className="day-btn"+(d===currentDay?" active":"");
+    b.textContent=routine[d].name;
+    b.onclick=()=>{ currentDay=d; draft={}; renderDays(); renderSession(); };
+    daySelector.appendChild(b);
+  });
+}
+
+// ---- Last performance lookup ----
+function lastFor(exId){
+  for(const s of history){
+    const found = s.entries.find(e=>e.exId===exId);
+    if(found) return {date:s.date, sets:found.sets};
+  }
+  return null;
+}
+function fmtSets(sets){ return sets.map(s=>`${s.w||0}×${s.r||0}`).join("  ·  "); }
+
+// ---- Render session ----
+const exerciseList = document.getElementById("exerciseList");
+function renderSession(){
+  document.getElementById("sessionTitle").textContent = routine[currentDay].name;
+  document.getElementById("sessionSub").textContent = routine[currentDay].sub;
+  exerciseList.innerHTML="";
+  routine[currentDay].exercises.forEach(ex=>{
+    exerciseList.appendChild(exCard(ex));
+  });
+}
+
+function exCard(ex){
+  const card=document.createElement("div");
+  card.className="ex";
+  const last=lastFor(ex.id);
+
+  const head=document.createElement("div");
+  head.className="ex-head";
+  head.innerHTML=`<div class="ex-name">${escapeHtml(ex.name)}</div>
+    <div class="ex-target">${escapeHtml(ex.target||"")}</div>
+    <div class="chev">▼</div>`;
+  head.onclick=(e)=>{ if(e.target.closest(".inp"))return; card.classList.toggle("open"); };
+  card.appendChild(head);
+
+  if(last){
+    const l=document.createElement("div");
+    l.className="ex-last";
+    l.innerHTML=`Última (${last.date.slice(8,10)}/${last.date.slice(5,7)}): <b>${fmtSets(last.sets)}</b>`;
+    card.appendChild(l);
+  }
+
+  const body=document.createElement("div");
+  body.className="ex-body";
+  if(!draft[ex.id]){
+    draft[ex.id] = last ? last.sets.map(s=>({w:"",r:"",ph_w:s.w,ph_r:s.r})) : [{w:"",r:""},{w:"",r:""},{w:"",r:""}];
+  }
+  body.appendChild(setsBlock(ex, card));
+  card.appendChild(body);
+  return card;
+}
+
+function setsBlock(ex, card){
+  const wrap=document.createElement("div");
+  const sets=draft[ex.id];
+
+  const head=document.createElement("div");
+  head.className="set-head";
+  head.innerHTML=`<div></div><div class="inp-lbl">Kg</div><div class="inp-lbl">Reps</div><div></div>`;
+  wrap.appendChild(head);
+
+  sets.forEach((set,i)=>{
+    const row=document.createElement("div");
+    row.className="set-row";
+    const idx=document.createElement("div"); idx.className="idx"; idx.textContent=i+1;
+    const w=document.createElement("input");
+    w.className="inp"; w.type="number"; w.inputMode="decimal"; w.value=set.w;
+    w.placeholder=set.ph_w!=null?set.ph_w:"–";
+    w.oninput=()=>{ set.w=w.value; };
+    const r=document.createElement("input");
+    r.className="inp"; r.type="number"; r.inputMode="numeric"; r.value=set.r;
+    r.placeholder=set.ph_r!=null?set.ph_r:"–";
+    r.oninput=()=>{ set.r=r.value; };
+    const del=document.createElement("button");
+    del.className="del-set"; del.textContent="×";
+    del.onclick=()=>{ sets.splice(i,1); rebuild(ex,card); };
+    row.append(idx,w,r,del);
+    wrap.appendChild(row);
+  });
+
+  const flash=document.createElement("div");
+  flash.className="saved-flash"; flash.textContent="✓ Guardado";
+
+  const btns=document.createElement("div");
+  btns.className="row-btns";
+  const addSet=document.createElement("button");
+  addSet.className="mini-btn"; addSet.textContent="+ Serie";
+  addSet.onclick=()=>{ sets.push({w:"",r:""}); rebuild(ex,card); };
+  const saveBtn=document.createElement("button");
+  saveBtn.className="mini-btn save"; saveBtn.textContent="Guardar ejercicio";
+  saveBtn.onclick=()=>{ saveExercise(ex); flash.style.display="block"; setTimeout(()=>flash.style.display="none",1400); };
+  btns.append(addSet,saveBtn);
+  wrap.append(btns,flash);
+  return wrap;
+}
+
+function rebuild(ex,card){
+  const body=card.querySelector(".ex-body");
+  body.innerHTML="";
+  body.appendChild(setsBlock(ex,card));
+}
+
+// ---- Save logic ----
+function saveExercise(ex){
+  const sets = draft[ex.id]
+    .map(s=>({w:numOrNull(s.w), r:numOrNull(s.r)}))
+    .filter(s=>s.w!=null || s.r!=null);
+  if(sets.length===0){ return; }
+  const day=isoDay();
+  let session = history.find(s=>s.date===day && s.day===currentDay);
+  if(!session){
+    session={date:day, day:currentDay, dayName:routine[currentDay].name, entries:[]};
+    history.unshift(session);
+  }
+  session.entries = session.entries.filter(e=>e.exId!==ex.id);
+  session.entries.push({exId:ex.id, name:ex.name, sets});
+  save(K_HISTORY, history);
+}
+
+function numOrNull(v){ if(v===""||v==null)return null; const n=parseFloat(v); return isNaN(n)?null:n; }
+
+// ---- History view ----
+function renderHistory(){
+  const list=document.getElementById("historyList");
+  if(history.length===0){
+    list.innerHTML=`<div class="empty"><div class="big">▦</div>Todavía no registraste nada.<br>Cargá tu primer ejercicio en la pestaña Registrar.</div>`;
+    return;
+  }
+  list.innerHTML="";
+  history.forEach(s=>{
+    const item=document.createElement("div");
+    item.className="hist-item";
+    const d=new Date(s.date+"T00:00:00");
+    const ds=d.toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"});
+    let html=`<div class="hist-date">${ds} · ${s.dayName||""}</div>`;
+    s.entries.forEach(e=>{
+      html+=`<div class="hist-ex"><b>${escapeHtml(e.name)}</b><br><span class="sets">${fmtSets(e.sets)}</span></div>`;
+    });
+    item.innerHTML=html;
+    list.appendChild(item);
+  });
+}
+
+// ---- Navigation ----
+document.querySelectorAll(".nav-btn").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    ["logView","historyView","settingsView"].forEach(v=>document.getElementById(v).classList.add("hidden"));
+    const v=btn.dataset.view;
+    document.getElementById(v).classList.remove("hidden");
+    if(v==="historyView") renderHistory();
+  };
+});
+
+// ---- Add / edit exercise modal ----
+const modalBg=document.getElementById("modalBg");
+const modalInput=document.getElementById("modalInput");
+const modalTarget=document.getElementById("modalTarget");
+let modalCb=null;
+function openModal(title, name, target, cb){
+  document.getElementById("modalTitle").textContent=title;
+  modalInput.value=name||""; modalTarget.value=target||"";
+  modalCb=cb; modalBg.classList.add("show");
+  setTimeout(()=>modalInput.focus(),100);
+}
+function closeModal(){ modalBg.classList.remove("show"); modalCb=null; }
+document.getElementById("modalCancel").onclick=closeModal;
+modalBg.onclick=(e)=>{ if(e.target===modalBg) closeModal(); };
+document.getElementById("modalOk").onclick=()=>{
+  const name=modalInput.value.trim();
+  if(!name)return;
+  if(modalCb) modalCb(name, modalTarget.value.trim());
+  closeModal();
+};
+document.getElementById("addExBtn").onclick=()=>{
+  openModal("Agregar ejercicio","","",(name,target)=>{
+    routine[currentDay].exercises.push({id:"x"+Date.now(), name, target});
+    save(K_ROUTINE, routine);
+    renderSession();
+  });
+};
+
+// ---- Settings actions ----
+document.getElementById("exportBtn").onclick=()=>{
+  const data={routine, history, exportedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`entreno-respaldo-${isoDay()}.json`;
+  a.click();
+};
+document.getElementById("importBtn").onclick=()=>document.getElementById("fileInput").click();
+document.getElementById("fileInput").onchange=(e)=>{
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const d=JSON.parse(reader.result);
+      if(d.routine) routine=d.routine;
+      if(d.history) history=d.history;
+      save(K_ROUTINE,routine); save(K_HISTORY,history);
+      renderDays(); renderSession();
+      alert("Datos importados.");
+    }catch(err){ alert("No se pudo leer el archivo."); }
+  };
+  reader.readAsText(file);
+};
+document.getElementById("resetRoutineBtn").onclick=()=>{
+  if(confirm("¿Restaurar la rutina original? Tu historial no se toca.")){
+    routine=structuredClone(DEFAULT_ROUTINE);
+    save(K_ROUTINE,routine); draft={}; renderDays(); renderSession();
+  }
+};
+document.getElementById("wipeBtn").onclick=()=>{
+  if(confirm("¿Borrar TODO, incluido el historial? No se puede deshacer.")){
+    localStorage.removeItem(K_ROUTINE); localStorage.removeItem(K_HISTORY);
+    routine=structuredClone(DEFAULT_ROUTINE); history=[]; draft={};
+    renderDays(); renderSession(); renderHistory();
+  }
+};
+
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+// ---- Init ----
+renderDays();
+renderSession();
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+</script>
+</body>
+</html>
